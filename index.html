@@ -1,62 +1,51 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>คำนวณเงินปันผลจากหุ้น</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Dividend Calculator</title>
   <style>
-    body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto; }
-    h2 { color: darkblue; }
-    .section { margin-bottom: 30px; border: 1px solid #ccc; padding: 20px; border-radius: 8px; }
-    input, select { margin: 5px 0; padding: 5px; width: 100%; }
-    button { padding: 10px 15px; margin-top: 10px; }
-    .output { margin-top: 15px; background: #f9f9f9; padding: 15px; border-radius: 6px; }
+    body { font-family: sans-serif; padding: 20px; max-width: 900px; margin: auto; }
+    h1 { text-align: center; color: #2c3e50; }
+    label, select, input { display: block; width: 100%; margin: 10px 0; padding: 8px; font-size: 1em; }
+    button { padding: 10px 20px; font-size: 1em; margin-top: 15px; }
+    .section { border: 1px solid #ccc; padding: 20px; border-radius: 8px; margin-top: 20px; }
+    .output { background: #f2f2f2; padding: 15px; margin-top: 20px; border-radius: 8px; }
   </style>
 </head>
 <body>
-  <h1>เว็บไซต์คำนวณเงินปันผลจากหุ้น</h1>
-
+  <h1>ระบบคำนวณเงินปันผลอัตโนมัติ</h1>
   <div class="section">
-    <h2>1. หุ้นสหรัฐ</h2>
+    <label>ประเภทหุ้น:
+      <select id="market" onchange="fetchSymbols()">
+        <option value="us">หุ้นสหรัฐ</option>
+        <option value="th">หุ้นไทย</option>
+      </select>
+    </label>
+
+    <label>ชื่อหุ้น:
+      <input type="text" id="stockSymbol" placeholder="พิมพ์ชื่อหรือสัญลักษณ์หุ้น" list="stockList">
+      <datalist id="stockList"></datalist>
+    </label>
+
     <label>คุณมีหุ้นอยู่แล้วหรือไม่:
-      <select id="usdHasShares" onchange="toggleUSInput()">
+      <select id="haveShares" onchange="toggleMode()">
         <option value="no">ไม่มี</option>
         <option value="yes">มี</option>
       </select>
     </label>
-    <label id="usdInvestmentLabel">เงินลงทุน (บาท): <input type="text" id="usdInvestment" oninput="formatNumberInput(this)" /></label>
-    <label id="usdSharesLabel" style="display:none">จำนวนหุ้นที่มี: <input type="number" id="usdSharesOwned" step="0.0001" /></label>
-    <label>อัตราแลกเปลี่ยน (บาท/ดอลลาร์): <input type="number" id="usdRate" /></label>
-    <label>ชื่อหุ้น: <input type="text" id="usdStockName" /></label>
-    <label>ราคาหุ้น (USD): <input type="number" id="usdPricePerShare" /></label>
-    <label>เงินปันผลต่อปีต่อหุ้น (USD): <input type="number" id="usdDividendPerShare" /></label>
-    <button onclick="calculateUS()">คำนวณหุ้นสหรัฐ</button>
-    <button onclick="clearUS()">ล้างข้อมูล</button>
-    <div id="usdOutput" class="output"></div>
-  </div>
 
-  <div class="section">
-    <h2>2. หุ้นไทย</h2>
-    <label>คุณมีหุ้นอยู่แล้วหรือไม่:
-      <select id="thaiHasShares" onchange="toggleThaiInput()">
-        <option value="no">ไม่มี</option>
-        <option value="yes">มี</option>
-      </select>
-    </label>
-    <label id="thaiInvestmentLabel">เงินลงทุน (บาท): <input type="text" id="thaiInvestment" oninput="formatNumberInput(this)" /></label>
-    <label id="thaiSharesLabel" style="display:none">จำนวนหุ้นที่มี: <input type="number" id="thaiSharesOwned" /></label>
-    <label>ชื่อหุ้น: <input type="text" id="thaiStockName" /></label>
-    <label>ราคาหุ้น (บาท): <input type="number" id="thaiPricePerShare" /></label>
-    <label>เงินปันผลต่อปีต่อหุ้น (บาท): <input type="number" id="thaiDividendPerShare" /></label>
-    <button onclick="calculateThai()">คำนวณหุ้นไทย</button>
-    <button onclick="clearThai()">ล้างข้อมูล</button>
-    <div id="thaiOutput" class="output"></div>
-  </div>
+    <div id="investmentBlock">
+      <label>เงินลงทุน (บาท): <input type="text" id="investment" oninput="formatNumberInput(this)"></label>
+    </div>
 
-  <div style="text-align: center; margin-top: 30px;">
-    <button onclick="clearAll()" style="background-color: #f44336; color: white;">ล้างข้อมูลทั้งหมด</button>
-  </div>
+    <div id="shareBlock" style="display:none">
+      <label>จำนวนหุ้นที่มี: <input type="number" id="shares" step="0.0001"></label>
+    </div>
 
+    <button onclick="calculateDividend()">คำนวณเงินปันผล</button>
+    <div class="output" id="result"></div>
+  </div>
 
   <script>
     function formatNumberInput(input) {
@@ -70,121 +59,98 @@
       return parseFloat(str.replace(/,/g, '')) || 0;
     }
 
-    function toggleUSInput() {
-      const hasShares = document.getElementById("usdHasShares").value;
-      document.getElementById("usdInvestmentLabel").style.display = hasShares === "no" ? "block" : "none";
-      document.getElementById("usdSharesLabel").style.display = hasShares === "yes" ? "block" : "none";
+    function toggleMode() {
+      const mode = document.getElementById("haveShares").value;
+      document.getElementById("investmentBlock").style.display = mode === "no" ? "block" : "none";
+      document.getElementById("shareBlock").style.display = mode === "yes" ? "block" : "none";
     }
 
-    function toggleThaiInput() {
-      const hasShares = document.getElementById("thaiHasShares").value;
-      document.getElementById("thaiInvestmentLabel").style.display = hasShares === "no" ? "block" : "none";
-      document.getElementById("thaiSharesLabel").style.display = hasShares === "yes" ? "block" : "none";
+    function fetchSymbols() {
+      const market = document.getElementById("market").value;
+      const list = document.getElementById("stockList");
+      list.innerHTML = "";
+      const mockStocks = market === 'us'
+        ? ['AAPL', 'MSFT', 'TSLA', 'JEPQ']
+        : ['PTT', 'CPALL', 'ADVANC', 'BBL'];
+      mockStocks.forEach(s => {
+        const option = document.createElement("option");
+        option.value = s;
+        list.appendChild(option);
+      });
     }
 
-    function calculateUS() {
-      const hasShares = document.getElementById("usdHasShares").value;
-      const rate = parseFloat(document.getElementById("usdRate").value);
-      const priceUSD = parseFloat(document.getElementById("usdPricePerShare").value);
-      const dividendUSD = parseFloat(document.getElementById("usdDividendPerShare").value);
-      let shares = 0;
-      let usedTHB = 0;
-      let baht = 0;
-
-      if (hasShares === "yes") {
-        shares = parseFloat(document.getElementById("usdSharesOwned").value);
-        usedTHB = shares * priceUSD * rate;
-      } else {
-        baht = parseNumber(document.getElementById("usdInvestment").value);
-        const usd = baht / rate;
-        shares = usd / priceUSD;
-        const usedUSD = shares * priceUSD;
-        usedTHB = usedUSD * rate;
-      }
-
-      const totalDivUSD = shares * dividendUSD;
-      const totalDivTHB = totalDivUSD * rate;
-      const netDivUSD = totalDivUSD * 0.85;
-      const netDivTHB = totalDivTHB * 0.85;
-
-      document.getElementById("usdOutput").innerHTML = `
-        จำนวนหุ้น: ${shares.toFixed(4)} หุ้น (${usedTHB.toLocaleString()} บาท / ${(usedTHB / rate).toFixed(2)} USD)<br>
-        <br><strong>▶ เงินปันผลก่อนหักภาษี:</strong><br>
-        - รายปี: ${totalDivUSD.toFixed(2)} USD (${totalDivTHB.toLocaleString(undefined, {minimumFractionDigits: 2})} บาท)<br>
-        - ราย 6 เดือน: ${(totalDivUSD / 2).toFixed(2)} USD (${(totalDivTHB / 2).toLocaleString(undefined, {minimumFractionDigits: 2})} บาท)<br>
-        - รายไตรมาส: ${(totalDivUSD / 4).toFixed(2)} USD (${(totalDivTHB / 4).toLocaleString(undefined, {minimumFractionDigits: 2})} บาท)<br>
-        - รายเดือน: ${(totalDivUSD / 12).toFixed(2)} USD (${(totalDivTHB / 12).toLocaleString(undefined, {minimumFractionDigits: 2})} บาท)<br>
-        <br><strong>▶ เงินปันผลหลังหักภาษี 15%:</strong><br>
-        - รายปี: ${netDivUSD.toFixed(2)} USD (${netDivTHB.toLocaleString(undefined, {minimumFractionDigits: 2})} บาท)<br>
-        - ราย 6 เดือน: ${(netDivUSD / 2).toFixed(2)} USD (${(netDivTHB / 2).toLocaleString(undefined, {minimumFractionDigits: 2})} บาท)<br>
-        - รายไตรมาส: ${(netDivUSD / 4).toFixed(2)} USD (${(netDivTHB / 4).toLocaleString(undefined, {minimumFractionDigits: 2})} บาท)<br>
-        - รายเดือน: ${(netDivUSD / 12).toFixed(2)} USD (${(netDivTHB / 12).toLocaleString(undefined, {minimumFractionDigits: 2})} บาท)
-      `;
+    function fetchExchangeRate(callback) {
+      fetch('https://api.exchangerate.host/latest?base=USD&symbols=THB')
+        .then(res => res.json())
+        .then(data => callback(data.rates.THB));
     }
 
-    function calculateThai() {
-      const hasShares = document.getElementById("thaiHasShares").value;
-      const price = parseFloat(document.getElementById("thaiPricePerShare").value);
-      const dividend = parseFloat(document.getElementById("thaiDividendPerShare").value);
-      let shares = 0;
-      let baht = 0;
-      let usedTHB = 0;
-
-      if (hasShares === "yes") {
-        shares = parseFloat(document.getElementById("thaiSharesOwned").value);
-        usedTHB = shares * price;
-      } else {
-        baht = parseNumber(document.getElementById("thaiInvestment").value);
-        shares = Math.floor(baht / price);
-        usedTHB = shares * price;
-      }
-
-      const totalDiv = shares * dividend;
-      const netDiv = totalDiv * 0.9;
-
-      document.getElementById("thaiOutput").innerHTML = `
-        จำนวนหุ้น: ${shares} หุ้น (${usedTHB.toLocaleString()} บาท)<br>
-        <br><strong>▶ เงินปันผลก่อนหักภาษี:</strong><br>
-        - รายปี: ${totalDiv.toLocaleString(undefined, {minimumFractionDigits: 2})} บาท<br>
-        - ราย 6 เดือน: ${(totalDiv / 2).toLocaleString(undefined, {minimumFractionDigits: 2})} บาท<br>
-        - รายไตรมาส: ${(totalDiv / 4).toLocaleString(undefined, {minimumFractionDigits: 2})} บาท<br>
-        - รายเดือน: ${(totalDiv / 12).toLocaleString(undefined, {minimumFractionDigits: 2})} บาท<br>
-        <br><strong>▶ เงินปันผลหลังหักภาษี 10%:</strong><br>
-        - รายปี: ${netDiv.toLocaleString(undefined, {minimumFractionDigits: 2})} บาท<br>
-        - ราย 6 เดือน: ${(netDiv / 2).toLocaleString(undefined, {minimumFractionDigits: 2})} บาท<br>
-        - รายไตรมาส: ${(netDiv / 4).toLocaleString(undefined, {minimumFractionDigits: 2})} บาท<br>
-        - รายเดือน: ${(netDiv / 12).toLocaleString(undefined, {minimumFractionDigits: 2})} บาท
-      `;
+    function fetchStockData(symbol, market, callback) {
+  if (market === 'us') {
+    // Fetch from Yahoo Finance for US stocks
+    const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=summaryDetail`;
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        const detail = data.quoteSummary?.result?.[0]?.summaryDetail;
+        if (!detail) return callback({ price: 0, dividend: 0 });
+        const price = detail.previousClose?.raw || 0;
+        const dividend = detail.dividendRate?.raw || 0;
+        callback({ price, dividend });
+      })
+      .catch(() => callback({ price: 0, dividend: 0 }));
+  } else {
+    // ยังใช้ mock สำหรับหุ้นไทย (สามารถเชื่อม SET API ได้ในอนาคต)
+    const mockData = {
+      'PTT': { price: 34.25, dividend: 1.75 },
+      'ADVANC': { price: 220.00, dividend: 6.50 },
+      'CPALL': { price: 61.00, dividend: 2.40 },
+      'BBL': { price: 127.00, dividend: 4.00 }
+    };
+    callback(mockData[symbol] || { price: 100, dividend: 1 });
+  }
+}
     }
 
-    function clearUS() {
-      document.getElementById("usdInvestment").value = "";
-      document.getElementById("usdSharesOwned").value = "";
-      document.getElementById("usdRate").value = "";
-      document.getElementById("usdStockName").value = "";
-      document.getElementById("usdPricePerShare").value = "";
-      document.getElementById("usdDividendPerShare").value = "";
-      document.getElementById("usdOutput").innerHTML = "";
-      document.getElementById("usdHasShares").value = "no";
-      toggleUSInput();
+    function calculateDividend() {
+      const market = document.getElementById('market').value;
+      const symbol = document.getElementById('stockSymbol').value.trim();
+      const haveShares = document.getElementById('haveShares').value;
+
+      if (!symbol) return alert("กรุณาใส่ชื่อหุ้น");
+
+      fetchExchangeRate(rate => {
+        fetchStockData(symbol, market, stock => {
+          let shares = 0;
+          let usedTHB = 0;
+
+          if (haveShares === 'yes') {
+            shares = parseFloat(document.getElementById('shares').value);
+            usedTHB = shares * stock.price * (market === 'us' ? rate : 1);
+          } else {
+            const investment = parseNumber(document.getElementById('investment').value);
+            shares = investment / (stock.price * (market === 'us' ? rate : 1));
+            usedTHB = investment;
+          }
+
+          const dividendYear = shares * stock.dividend;
+          const afterTax = dividendYear * (market === 'us' ? 0.85 : 0.9);
+          const dividendYield = (stock.dividend / stock.price) * 100;
+
+          document.getElementById('result').innerHTML = `
+            หุ้น: ${symbol} (${market === 'us' ? 'สหรัฐ' : 'ไทย'})<br>
+            ราคาหุ้น: ${stock.price.toFixed(2)} ${market === 'us' ? 'USD' : 'บาท'}<br>
+            เงินลงทุนทั้งหมด: ${usedTHB.toLocaleString(undefined, {minimumFractionDigits: 2})} บาท<br>
+            จำนวนหุ้น: ${shares.toFixed(4)} หุ้น<br>
+            อัตราเงินปันผล (Dividend Yield): ${dividendYield.toFixed(2)}%<br><br>
+            ▶ เงินปันผลต่อปี (ก่อนหักภาษี): ${dividendYear.toFixed(2)} ${market === 'us' ? 'USD' : 'บาท'}<br>
+            ▶ เงินปันผลหลังหักภาษี: ${afterTax.toFixed(2)} ${market === 'us' ? 'USD' : 'บาท'}
+          `;
+        });
+      });
     }
 
-    function clearThai() {
-      document.getElementById("thaiInvestment").value = "";
-      document.getElementById("thaiSharesOwned").value = "";
-      document.getElementById("thaiStockName").value = "";
-      document.getElementById("thaiPricePerShare").value = "";
-      document.getElementById("thaiDividendPerShare").value = "";
-      document.getElementById("thaiOutput").innerHTML = "";
-      document.getElementById("thaiHasShares").value = "no";
-      toggleThaiInput();
-    }
-
-    function clearAll() {
-      clearUS();
-      clearThai();
-    }
-
+    fetchSymbols();
   </script>
 </body>
 </html>
