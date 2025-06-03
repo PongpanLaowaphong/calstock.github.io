@@ -86,30 +86,21 @@
     }
 
     function fetchStockData(symbol, market, callback) {
-  if (market === 'us') {
-    // Fetch from Yahoo Finance for US stocks
-    const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}?modules=summaryDetail`;
-    fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        const detail = data.quoteSummary?.result?.[0]?.summaryDetail;
-        if (!detail) return callback({ price: 0, dividend: 0 });
-        const price = detail.previousClose?.raw || 0;
-        const dividend = detail.dividendRate?.raw || 0;
-        callback({ price, dividend });
-      })
-      .catch(() => callback({ price: 0, dividend: 0 }));
-  } else {
-    // ยังใช้ mock สำหรับหุ้นไทย (สามารถเชื่อม SET API ได้ในอนาคต)
-    const mockData = {
-      'PTT': { price: 34.25, dividend: 1.75 },
-      'ADVANC': { price: 220.00, dividend: 6.50 },
-      'CPALL': { price: 61.00, dividend: 2.40 },
-      'BBL': { price: 127.00, dividend: 4.00 }
-    };
-    callback(mockData[symbol] || { price: 100, dividend: 1 });
-  }
-}
+      if (market === 'us') {
+        const url = `https://yahoo-proxy-openai.onrender.com/${symbol}`;
+        fetch(url)
+          .then(res => res.json())
+          .then(data => callback({ price: data.price || 0, dividend: data.dividend || 0 }))
+          .catch(() => callback({ price: 0, dividend: 0 }));
+      } else {
+        const mockData = {
+          'PTT': { price: 34.25, dividend: 1.75 },
+          'ADVANC': { price: 220.00, dividend: 6.50 },
+          'CPALL': { price: 61.00, dividend: 2.40 },
+          'BBL': { price: 127.00, dividend: 4.00 }
+        };
+        callback(mockData[symbol] || { price: 100, dividend: 1 });
+      }
     }
 
     function calculateDividend() {
