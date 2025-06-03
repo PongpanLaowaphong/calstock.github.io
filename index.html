@@ -97,8 +97,29 @@
 }
 
     function fetchStockData(symbol, market, callback) {
-      if (market === 'us') {
-        const url = `https://yahoo-proxy-openai.onrender.com/${symbol}`;
+  if (market === 'us') {
+    const url = `https://api.twelvedata.com/quote?symbol=${symbol}&apikey=demo`;
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        const price = parseFloat(data.close) || 0;
+        const dividend = parseFloat(data.dividend) || 0;
+        callback({ price, dividend });
+      })
+      .catch(() => {
+        alert('ไม่สามารถโหลดข้อมูลหุ้นจาก Twelve Data ได้');
+        callback({ price: 0, dividend: 0 });
+      });
+  } else {
+    const mockData = {
+      'PTT': { price: 34.25, dividend: 1.75 },
+      'ADVANC': { price: 220.00, dividend: 6.50 },
+      'CPALL': { price: 61.00, dividend: 2.40 },
+      'BBL': { price: 127.00, dividend: 4.00 }
+    };
+    callback(mockData[symbol] || { price: 100, dividend: 1 });
+  }
+}`;
         fetch(url)
           .then(res => res.json())
           .then(data => callback({ price: data.price || 0, dividend: data.dividend || 0 }))
