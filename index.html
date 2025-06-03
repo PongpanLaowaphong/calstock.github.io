@@ -80,10 +80,21 @@
     }
 
     function fetchExchangeRate(callback) {
-      fetch('https://api.exchangerate.host/latest?base=USD&symbols=THB')
-        .then(res => res.json())
-        .then(data => callback(data.rates.THB));
-    }
+  fetch('https://api.exchangerate.host/latest?base=USD&symbols=THB')
+    .then(res => res.json())
+    .then(data => {
+      if (data && data.rates && data.rates.THB) {
+        callback(data.rates.THB);
+      } else {
+        alert('ไม่สามารถโหลดอัตราแลกเปลี่ยน USD → THB ได้ กรุณาลองใหม่อีกครั้ง');
+        callback(0);
+      }
+    })
+    .catch(() => {
+      alert('เกิดข้อผิดพลาดในการโหลดอัตราแลกเปลี่ยน');
+      callback(0);
+    });
+}
 
     function fetchStockData(symbol, market, callback) {
       if (market === 'us') {
